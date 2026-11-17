@@ -1,7 +1,26 @@
 FROM richarvey/nginx-php-fpm:3.1.6
 
 COPY . .
-COPY conf/nginx/nginx-site.conf /etc/nginx/sites-enabled/default.conf
+
+# Configure Nginx to route all clean URLs through Laravel's public/index.php
+RUN printf 'server {\n\
+    listen 80;\n\
+    server_name _;\n\
+    root /var/www/html/public;\n\
+    index index.php index.html index.htm;\n\
+    location / {\n\
+        try_files $uri $uri/ /index.php?$query_string;\n\
+    }\n\
+    location ~ \\.php$ {\n\
+        fastcgi_split_path_info ^(.+\\.php)(/.+)$;\n\
+        fastcgi_pass unix:/var/run/php-fpm.sock;\n\
+        fastcgi_index index.php;\n\
+        include fastcgi_params;\n\
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;\n\
+        fastcgi_param PATH_INFO $fastcgi_path_info;\n\
+    }\n\
+}\n' > /etc/nginx/sites-enabled/default.conf
+
 # Image config
 ENV SKIP_COMPOSER 1
 ENV WEBROOT /var/www/html/public
