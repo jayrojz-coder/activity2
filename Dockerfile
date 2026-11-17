@@ -2,6 +2,9 @@ FROM richarvey/nginx-php-fpm:3.1.6
 
 COPY . .
 
+# Install Node.js & npm and build Vite assets (creates public/build/manifest.json)
+RUN apk add --update nodejs npm && npm install && npm run build
+
 # Configure Nginx to route all clean URLs through Laravel's public/index.php
 RUN printf 'server {\n\
     listen 80;\n\
